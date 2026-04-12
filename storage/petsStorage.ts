@@ -218,3 +218,27 @@ export async function deleteMedication(
 
   await savePets(updatedPets);
 }
+
+export async function updatePetPhoto(
+  petId: string,
+  photoUri: string,
+): Promise<void> {
+  const pets = await getPets();
+
+  console.log("pets", pets);
+
+  const updatedPets = pets.map((pet) =>
+    pet.id === petId
+      ? {
+          ...pet,
+          photoUri,
+        }
+      : pet,
+  );
+
+  console.log("Updating pet photo URI for pet ID:", petId);
+  console.log("New photo URI:", photoUri);
+  console.log("Updated pets array:", updatedPets);
+
+  await savePets(updatedPets);
+}

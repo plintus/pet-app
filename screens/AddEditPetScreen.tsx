@@ -40,8 +40,6 @@ export default function AddEditPetScreen() {
     router.replace("/pets");
   };
 
-  console.log("Editing pet:", pet);
-
   return (
     <View style={styles.container}>
       <PetForm initialValues={pet ?? undefined} onSubmit={handleSubmit} />

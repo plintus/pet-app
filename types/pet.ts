@@ -6,7 +6,7 @@ export type Pet = {
   dateOfBirth?: string;
   age?: number;
   notes?: string;
-  photoUrl?: string;
+  photoUri?: string;
 };
 
 export type AllergyReaction =

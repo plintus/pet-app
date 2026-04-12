@@ -1,6 +1,13 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Button, FlatList, StyleSheet, Text, View } from "react-native";
+import {
+  Button,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import PetCard from "../components/ui/PetCard";
 import { clearCurrentUser, getCurrentUser } from "../storage/usersStorage";
 import { Pet } from "../types/pet";
@@ -35,13 +42,16 @@ export default function PetListScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{userName}'s Pets</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{userName}'s Pets</Text>
 
-      <View style={styles.actions}>
-        <Button title="Add Pet" onPress={() => router.push("/pets/new")} />
-        <Button title="Switch User" onPress={handleSwitchUser} />
+        <Pressable
+          style={styles.addButton}
+          onPress={() => router.push("/pets/new")}
+        >
+          <Text style={styles.addButtonText}>+</Text>
+        </Pressable>
       </View>
-
       <FlatList
         data={pets}
         keyExtractor={(item) => item.id}
@@ -51,6 +61,9 @@ export default function PetListScreen() {
         ListEmptyComponent={<Text>No pets yet.</Text>}
         contentContainerStyle={{ paddingTop: 16 }}
       />
+      <View style={styles.actions}>
+        <Button title="Logout" onPress={handleSwitchUser} />
+      </View>
     </View>
   );
 }
@@ -68,5 +81,26 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 16,
     marginBottom: 8,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingTop: 16,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#111",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: "600",
   },
 });

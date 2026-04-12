@@ -1,15 +1,19 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
   Button,
+  Image,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { updatePetPhoto } from "../../storage/petsStorage";
 import { Pet } from "../../types/pet";
 
 type Props = {
@@ -28,6 +32,7 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showDobPicker, setShowDobPicker] = useState(false);
   const [tempDob, setTempDob] = useState(new Date());
+  const [photoUri, setPhotoUri] = useState("");
 
   const [vaccines, setVaccines] = useState<Pet["vaccines"]>([]);
   const [allergies, setAllergies] = useState<Pet["allergies"]>([]);
@@ -39,6 +44,7 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
     setBreed(initialValues?.breed ?? "");
     setNotes(initialValues?.notes ?? "");
     setDateOfBirth(initialValues?.dateOfBirth ?? "");
+    setPhotoUri(initialValues?.photoUri ?? "");
 
     if (initialValues?.dateOfBirth) {
       setTempDob(new Date(initialValues.dateOfBirth));
@@ -76,8 +82,50 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
     }
   };
 
+  const pickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const newPhotoUri = result.assets[0].uri;
+
+      setPhotoUri(newPhotoUri);
+
+      if (initialValues?.id) {
+        await updatePetPhoto(initialValues.id, newPhotoUri);
+      }
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.label}>Photo</Text>
+
+      {photoUri ? (
+        <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+      ) : null}
+
+      <View style={styles.photoActions}>
+        <Button
+          title={photoUri ? "Change Photo" : "Add Photo"}
+          onPress={pickPhoto}
+        />
+        {photoUri ? (
+          <Button title="Remove Photo" onPress={() => setPhotoUri("")} />
+        ) : null}
+      </View>
       <Text style={styles.label}>Name</Text>
       <TextInput
         placeholder="Name"
@@ -203,7 +251,10 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
         placeholder="Notes"
         value={notes}
         onChangeText={setNotes}
-        style={styles.input}
+        style={[styles.input, styles.notesInput]}
+        multiline
+        numberOfLines={4}
+        textAlignVertical="top"
       />
 
       <Button
@@ -215,10 +266,14 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
             breed,
             notes,
             dateOfBirth,
+            photoUri,
+            vaccines,
+            allergies,
+            medications,
           })
         }
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -298,5 +353,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#444",
+  },
+  notesInput: {
+    minHeight: 100,
+    paddingTop: 12,
+  },
+  photoPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: "#eee",
+    alignSelf: "center",
+  },
+  photoActions: {
+    gap: 8,
+    marginBottom: 12,
   },
 });

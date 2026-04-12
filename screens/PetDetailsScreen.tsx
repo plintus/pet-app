@@ -1,6 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import {
   deletePetForCurrentUser,
   getPetByIdForCurrentUser,
@@ -22,6 +23,24 @@ export default function PetDetailScreen() {
     loadPet();
   }, [id]);
 
+  const confirmDelete = () => {
+    Alert.alert(
+      "Delete pet?",
+      `Are you sure you want to delete ${pet?.name} record?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: handleDelete,
+        },
+      ],
+    );
+  };
+
   const handleDelete = async () => {
     if (!id) return;
     await deletePetForCurrentUser(id);
@@ -38,23 +57,31 @@ export default function PetDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>{pet.name}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.name}>{pet.name}</Text>
+
+        <View style={styles.iconActions}>
+          <Pressable
+            style={styles.iconButton}
+            onPress={() =>
+              router.push({
+                pathname: "/pets/edit/[id]",
+                params: { id: pet.id },
+              })
+            }
+          >
+            <Ionicons name="pencil" size={20} color="#111" />
+          </Pressable>
+
+          <Pressable style={styles.iconButton} onPress={confirmDelete}>
+            <Ionicons name="trash-outline" size={20} color="#111" />
+          </Pressable>
+        </View>
+      </View>
+
       <Text>Type: {pet.type}</Text>
       <Text>Breed: {pet.breed || "N/A"}</Text>
       <Text>Notes: {pet.notes || "N/A"}</Text>
-
-      <View style={styles.buttons}>
-        <Button
-          title="Edit"
-          onPress={() =>
-            router.push({
-              pathname: `/pets/edit/[id]`,
-              params: { id: pet.id },
-            })
-          }
-        />
-        <Button title="Delete" onPress={handleDelete} />
-      </View>
     </View>
   );
 }
@@ -68,9 +95,29 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: "700",
+    maxWidth: "80%",
   },
   buttons: {
     marginTop: 20,
     gap: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  iconActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  iconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f3f4f6",
   },
 });
