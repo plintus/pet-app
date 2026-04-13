@@ -7,6 +7,9 @@ export type Pet = {
   age?: number;
   notes?: string;
   photoUri?: string;
+  vaccines: Vaccine[];
+  allergies: Allergy[];
+  medications: Medication[];
 };
 
 export type AllergyReaction =
