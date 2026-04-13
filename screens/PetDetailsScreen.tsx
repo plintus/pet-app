@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -408,6 +409,16 @@ export default function PetDetailScreen() {
 
   const renderInfoTab = () => (
     <View style={styles.section}>
+      <View style={styles.photoWrapper}>
+        {pet?.photoUri ? (
+          <Image source={{ uri: pet.photoUri }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.profilePlaceholder}>
+            <Text style={styles.placeholderText}>🐾</Text>
+          </View>
+        )}
+      </View>
+
       <Text style={styles.rowText}>Type: {pet?.type || "N/A"}</Text>
       <Text style={styles.rowText}>Breed: {pet?.breed || "N/A"}</Text>
       <Text style={styles.rowText}>
@@ -1290,5 +1301,23 @@ const styles = StyleSheet.create({
   activeTabLabel: {
     color: "#111",
     fontWeight: "600",
+  },
+  photoWrapper: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#eee",
+  },
+  profilePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
