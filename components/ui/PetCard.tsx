@@ -13,7 +13,7 @@ export default function PetCard({ pet, onPress }: Props) {
         <Image source={{ uri: pet.photoUri }} style={styles.photo} />
       ) : (
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>🐾</Text>{" "}
+          <Text style={styles.placeholderText}>🐾</Text>
           {/* // Placeholder for pets without photos; can make a custom icon based on the breed */}
         </View>
       )}
