@@ -14,6 +14,17 @@ import {
   View,
 } from "react-native";
 import {
+  addAllergyToPet,
+  addMedicationToPet,
+  addVaccineToPet,
+  removeAllergyFromPet,
+  removeMedicationFromPet,
+  removeVaccineFromPet,
+  updateAllergyOnPet,
+  updateMedicationOnPet,
+  updateVaccineOnPet,
+} from "../storage/petsStorage";
+import {
   deletePetForCurrentUser,
   getPetByIdForCurrentUser,
   updatePetForCurrentUser,
@@ -95,9 +106,6 @@ export default function PetDetailScreen() {
     loadPet();
   }, [id]);
 
-  const createId = () =>
-    `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -169,17 +177,10 @@ export default function PetDetailScreen() {
   const handleAddVaccine = async () => {
     if (!pet || !newVaccineName.trim() || !newVaccineDate) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      vaccines: [
-        ...pet.vaccines,
-        {
-          id: createId(),
-          name: newVaccineName.trim(),
-          dateAdministered: newVaccineDate,
-        },
-      ],
-    };
+    const updatedPet = addVaccineToPet(pet, {
+      name: newVaccineName.trim(),
+      dateAdministered: newVaccineDate,
+    });
 
     await saveUpdatedPet(updatedPet);
     setNewVaccineName("");
@@ -189,11 +190,7 @@ export default function PetDetailScreen() {
   const handleRemoveVaccine = async (vaccineId: string) => {
     if (!pet) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      vaccines: pet.vaccines.filter((vaccine) => vaccine.id !== vaccineId),
-    };
-
+    const updatedPet = removeVaccineFromPet(pet, vaccineId);
     await saveUpdatedPet(updatedPet);
 
     if (editingVaccineId === vaccineId) {
@@ -225,21 +222,15 @@ export default function PetDetailScreen() {
       !editingVaccineId ||
       !editVaccineName.trim() ||
       !editVaccineDate
-    )
+    ) {
       return;
+    }
 
-    const updatedPet: Pet = {
-      ...pet,
-      vaccines: pet.vaccines.map((vaccine) =>
-        vaccine.id === editingVaccineId
-          ? {
-              ...vaccine,
-              name: editVaccineName.trim(),
-              dateAdministered: editVaccineDate,
-            }
-          : vaccine,
-      ),
-    };
+    const updatedPet = updateVaccineOnPet(pet, {
+      id: editingVaccineId,
+      name: editVaccineName.trim(),
+      dateAdministered: editVaccineDate,
+    });
 
     await saveUpdatedPet(updatedPet);
     cancelEditVaccine();
@@ -264,18 +255,11 @@ export default function PetDetailScreen() {
   const handleAddAllergy = async () => {
     if (!pet || !newAllergyName.trim()) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      allergies: [
-        ...pet.allergies,
-        {
-          id: createId(),
-          name: newAllergyName.trim(),
-          reactions: newAllergyReactions,
-          severity: newAllergySeverity,
-        },
-      ],
-    };
+    const updatedPet = addAllergyToPet(pet, {
+      name: newAllergyName.trim(),
+      reactions: newAllergyReactions,
+      severity: newAllergySeverity,
+    });
 
     await saveUpdatedPet(updatedPet);
     setNewAllergyName("");
@@ -286,11 +270,7 @@ export default function PetDetailScreen() {
   const handleRemoveAllergy = async (allergyId: string) => {
     if (!pet) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      allergies: pet.allergies.filter((allergy) => allergy.id !== allergyId),
-    };
-
+    const updatedPet = removeAllergyFromPet(pet, allergyId);
     await saveUpdatedPet(updatedPet);
 
     if (editingAllergyId === allergyId) {
@@ -315,19 +295,12 @@ export default function PetDetailScreen() {
   const saveEditedAllergy = async () => {
     if (!pet || !editingAllergyId || !editAllergyName.trim()) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      allergies: pet.allergies.map((allergy) =>
-        allergy.id === editingAllergyId
-          ? {
-              ...allergy,
-              name: editAllergyName.trim(),
-              reactions: editAllergyReactions,
-              severity: editAllergySeverity,
-            }
-          : allergy,
-      ),
-    };
+    const updatedPet = updateAllergyOnPet(pet, {
+      id: editingAllergyId,
+      name: editAllergyName.trim(),
+      reactions: editAllergyReactions,
+      severity: editAllergySeverity,
+    });
 
     await saveUpdatedPet(updatedPet);
     cancelEditAllergy();
@@ -336,18 +309,11 @@ export default function PetDetailScreen() {
   const handleAddMedication = async () => {
     if (!pet || !newMedicationName.trim()) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      medications: [
-        ...pet.medications,
-        {
-          id: createId(),
-          name: newMedicationName.trim(),
-          dosage: newMedicationDosage.trim(),
-          instructions: newMedicationInstructions.trim(),
-        },
-      ],
-    };
+    const updatedPet = addMedicationToPet(pet, {
+      name: newMedicationName.trim(),
+      dosage: newMedicationDosage.trim(),
+      instructions: newMedicationInstructions.trim(),
+    });
 
     await saveUpdatedPet(updatedPet);
     setNewMedicationName("");
@@ -358,13 +324,7 @@ export default function PetDetailScreen() {
   const handleRemoveMedication = async (medicationId: string) => {
     if (!pet) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      medications: pet.medications.filter(
-        (medication) => medication.id !== medicationId,
-      ),
-    };
-
+    const updatedPet = removeMedicationFromPet(pet, medicationId);
     await saveUpdatedPet(updatedPet);
 
     if (editingMedicationId === medicationId) {
@@ -389,19 +349,12 @@ export default function PetDetailScreen() {
   const saveEditedMedication = async () => {
     if (!pet || !editingMedicationId || !editMedicationName.trim()) return;
 
-    const updatedPet: Pet = {
-      ...pet,
-      medications: pet.medications.map((medication) =>
-        medication.id === editingMedicationId
-          ? {
-              ...medication,
-              name: editMedicationName.trim(),
-              dosage: editMedicationDosage.trim(),
-              instructions: editMedicationInstructions.trim(),
-            }
-          : medication,
-      ),
-    };
+    const updatedPet = updateMedicationOnPet(pet, {
+      id: editingMedicationId,
+      name: editMedicationName.trim(),
+      dosage: editMedicationDosage.trim(),
+      instructions: editMedicationInstructions.trim(),
+    });
 
     await saveUpdatedPet(updatedPet);
     cancelEditMedication();
