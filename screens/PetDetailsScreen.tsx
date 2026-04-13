@@ -23,8 +23,10 @@ type DetailTab = "info" | "vaccines" | "allergies" | "medications";
 type Vaccine = Pet["vaccines"][number];
 type Allergy = Pet["allergies"][number];
 type Medication = Pet["medications"][number];
+type AllergyReaction = Allergy["reactions"][number];
+type AllergySeverity = Allergy["severity"];
 
-const ALLERGY_REACTIONS = [
+const ALLERGY_REACTIONS: AllergyReaction[] = [
   "hives",
   "rash",
   "swelling",
@@ -32,9 +34,9 @@ const ALLERGY_REACTIONS = [
   "itching",
   "trouble breathing",
   "other",
-] as const;
+];
 
-const ALLERGY_SEVERITIES = ["mild", "severe"] as const;
+const ALLERGY_SEVERITIES: AllergySeverity[] = ["mild", "severe"];
 
 export default function PetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,14 +50,38 @@ export default function PetDetailScreen() {
   const [tempVaccineDate, setTempVaccineDate] = useState(new Date());
 
   const [newAllergyName, setNewAllergyName] = useState("");
-  const [newAllergyReactions, setNewAllergyReactions] = useState<string[]>([]);
-  const [newAllergySeverity, setNewAllergySeverity] = useState<
-    "mild" | "severe"
-  >("mild");
+  const [newAllergyReactions, setNewAllergyReactions] = useState<
+    AllergyReaction[]
+  >([]);
+  const [newAllergySeverity, setNewAllergySeverity] =
+    useState<AllergySeverity>("mild");
 
   const [newMedicationName, setNewMedicationName] = useState("");
   const [newMedicationDosage, setNewMedicationDosage] = useState("");
   const [newMedicationInstructions, setNewMedicationInstructions] =
+    useState("");
+
+  const [editingVaccineId, setEditingVaccineId] = useState<string | null>(null);
+  const [editVaccineName, setEditVaccineName] = useState("");
+  const [editVaccineDate, setEditVaccineDate] = useState("");
+  const [showEditVaccineDatePicker, setShowEditVaccineDatePicker] =
+    useState(false);
+  const [tempEditVaccineDate, setTempEditVaccineDate] = useState(new Date());
+
+  const [editingAllergyId, setEditingAllergyId] = useState<string | null>(null);
+  const [editAllergyName, setEditAllergyName] = useState("");
+  const [editAllergyReactions, setEditAllergyReactions] = useState<
+    AllergyReaction[]
+  >([]);
+  const [editAllergySeverity, setEditAllergySeverity] =
+    useState<AllergySeverity>("mild");
+
+  const [editingMedicationId, setEditingMedicationId] = useState<string | null>(
+    null,
+  );
+  const [editMedicationName, setEditMedicationName] = useState("");
+  const [editMedicationDosage, setEditMedicationDosage] = useState("");
+  const [editMedicationInstructions, setEditMedicationInstructions] =
     useState("");
 
   useEffect(() => {
@@ -123,6 +149,22 @@ export default function PetDetailScreen() {
     }
   };
 
+  const handleEditVaccineDateChange = (_event: any, selectedDate?: Date) => {
+    if (!selectedDate) {
+      if (Platform.OS === "android") {
+        setShowEditVaccineDatePicker(false);
+      }
+      return;
+    }
+
+    setTempEditVaccineDate(selectedDate);
+
+    if (Platform.OS === "android") {
+      setEditVaccineDate(formatDate(selectedDate));
+      setShowEditVaccineDatePicker(false);
+    }
+  };
+
   const handleAddVaccine = async () => {
     if (!pet || !newVaccineName.trim() || !newVaccineDate) return;
 
@@ -152,10 +194,66 @@ export default function PetDetailScreen() {
     };
 
     await saveUpdatedPet(updatedPet);
+
+    if (editingVaccineId === vaccineId) {
+      cancelEditVaccine();
+    }
   };
 
-  const toggleReaction = (reaction: string) => {
+  const startEditVaccine = (vaccine: Vaccine) => {
+    setEditingVaccineId(vaccine.id);
+    setEditVaccineName(vaccine.name);
+    setEditVaccineDate(vaccine.dateAdministered);
+    setTempEditVaccineDate(
+      vaccine.dateAdministered
+        ? new Date(vaccine.dateAdministered)
+        : new Date(),
+    );
+  };
+
+  const cancelEditVaccine = () => {
+    setEditingVaccineId(null);
+    setEditVaccineName("");
+    setEditVaccineDate("");
+    setShowEditVaccineDatePicker(false);
+  };
+
+  const saveEditedVaccine = async () => {
+    if (
+      !pet ||
+      !editingVaccineId ||
+      !editVaccineName.trim() ||
+      !editVaccineDate
+    )
+      return;
+
+    const updatedPet: Pet = {
+      ...pet,
+      vaccines: pet.vaccines.map((vaccine) =>
+        vaccine.id === editingVaccineId
+          ? {
+              ...vaccine,
+              name: editVaccineName.trim(),
+              dateAdministered: editVaccineDate,
+            }
+          : vaccine,
+      ),
+    };
+
+    await saveUpdatedPet(updatedPet);
+    cancelEditVaccine();
+  };
+
+  const toggleReaction = (reaction: AllergyReaction) => {
     setNewAllergyReactions((prev) =>
+      prev.includes(reaction)
+        ? prev.filter((item) => item !== reaction)
+        : [...prev, reaction],
+    );
+  };
+
+  const toggleEditReaction = (reaction: AllergyReaction) => {
+    setEditAllergyReactions((prev) =>
       prev.includes(reaction)
         ? prev.filter((item) => item !== reaction)
         : [...prev, reaction],
@@ -193,6 +291,45 @@ export default function PetDetailScreen() {
     };
 
     await saveUpdatedPet(updatedPet);
+
+    if (editingAllergyId === allergyId) {
+      cancelEditAllergy();
+    }
+  };
+
+  const startEditAllergy = (allergy: Allergy) => {
+    setEditingAllergyId(allergy.id);
+    setEditAllergyName(allergy.name);
+    setEditAllergyReactions(allergy.reactions ?? []);
+    setEditAllergySeverity(allergy.severity);
+  };
+
+  const cancelEditAllergy = () => {
+    setEditingAllergyId(null);
+    setEditAllergyName("");
+    setEditAllergyReactions([]);
+    setEditAllergySeverity("mild");
+  };
+
+  const saveEditedAllergy = async () => {
+    if (!pet || !editingAllergyId || !editAllergyName.trim()) return;
+
+    const updatedPet: Pet = {
+      ...pet,
+      allergies: pet.allergies.map((allergy) =>
+        allergy.id === editingAllergyId
+          ? {
+              ...allergy,
+              name: editAllergyName.trim(),
+              reactions: editAllergyReactions,
+              severity: editAllergySeverity,
+            }
+          : allergy,
+      ),
+    };
+
+    await saveUpdatedPet(updatedPet);
+    cancelEditAllergy();
   };
 
   const handleAddMedication = async () => {
@@ -228,6 +365,45 @@ export default function PetDetailScreen() {
     };
 
     await saveUpdatedPet(updatedPet);
+
+    if (editingMedicationId === medicationId) {
+      cancelEditMedication();
+    }
+  };
+
+  const startEditMedication = (medication: Medication) => {
+    setEditingMedicationId(medication.id);
+    setEditMedicationName(medication.name);
+    setEditMedicationDosage(medication.dosage);
+    setEditMedicationInstructions(medication.instructions);
+  };
+
+  const cancelEditMedication = () => {
+    setEditingMedicationId(null);
+    setEditMedicationName("");
+    setEditMedicationDosage("");
+    setEditMedicationInstructions("");
+  };
+
+  const saveEditedMedication = async () => {
+    if (!pet || !editingMedicationId || !editMedicationName.trim()) return;
+
+    const updatedPet: Pet = {
+      ...pet,
+      medications: pet.medications.map((medication) =>
+        medication.id === editingMedicationId
+          ? {
+              ...medication,
+              name: editMedicationName.trim(),
+              dosage: editMedicationDosage.trim(),
+              instructions: editMedicationInstructions.trim(),
+            }
+          : medication,
+      ),
+    };
+
+    await saveUpdatedPet(updatedPet);
+    cancelEditMedication();
   };
 
   const renderInfoTab = () => (
@@ -244,26 +420,120 @@ export default function PetDetailScreen() {
   const renderVaccinesTab = () => (
     <View style={styles.section}>
       {pet?.vaccines?.length ? (
-        pet.vaccines.map((vaccine: Vaccine) => (
-          <View key={vaccine.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>
-                {vaccine.name || "Unnamed vaccine"}
-              </Text>
+        pet.vaccines.map((vaccine: Vaccine) => {
+          const isEditing = editingVaccineId === vaccine.id;
 
-              <Pressable
-                style={styles.inlineDeleteButton}
-                onPress={() => handleRemoveVaccine(vaccine.id)}
-              >
-                <Ionicons name="trash-outline" size={18} color="#b91c1c" />
-              </Pressable>
+          return (
+            <View key={vaccine.id} style={styles.card}>
+              {isEditing ? (
+                <>
+                  <TextInput
+                    placeholder="Vaccine name"
+                    value={editVaccineName}
+                    onChangeText={setEditVaccineName}
+                    style={styles.input}
+                  />
+
+                  <Pressable
+                    style={styles.input}
+                    onPress={() => {
+                      setTempEditVaccineDate(
+                        editVaccineDate
+                          ? new Date(editVaccineDate)
+                          : new Date(),
+                      );
+                      setShowEditVaccineDatePicker(true);
+                    }}
+                  >
+                    <Text
+                      style={
+                        editVaccineDate
+                          ? styles.selectedText
+                          : styles.placeholderText
+                      }
+                    >
+                      {editVaccineDate || "Select date administered..."}
+                    </Text>
+                  </Pressable>
+
+                  {showEditVaccineDatePicker ? (
+                    <View style={styles.datePickerWrapper}>
+                      <DateTimePicker
+                        value={tempEditVaccineDate}
+                        mode="date"
+                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                        maximumDate={new Date()}
+                        onChange={handleEditVaccineDateChange}
+                      />
+
+                      {Platform.OS === "ios" ? (
+                        <Pressable
+                          style={styles.secondaryButton}
+                          onPress={() => {
+                            setEditVaccineDate(formatDate(tempEditVaccineDate));
+                            setShowEditVaccineDatePicker(false);
+                          }}
+                        >
+                          <Text style={styles.secondaryButtonText}>
+                            Use This Date
+                          </Text>
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  ) : null}
+
+                  <View style={styles.editActionsRow}>
+                    <Pressable
+                      style={styles.secondaryActionButton}
+                      onPress={cancelEditVaccine}
+                    >
+                      <Text style={styles.secondaryButtonText}>Cancel</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.primaryActionButton}
+                      onPress={saveEditedVaccine}
+                    >
+                      <Text style={styles.primaryButtonText}>Save</Text>
+                    </Pressable>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>
+                      {vaccine.name || "Unnamed vaccine"}
+                    </Text>
+
+                    <View style={styles.inlineActions}>
+                      <Pressable
+                        style={styles.inlineEditButton}
+                        onPress={() => startEditVaccine(vaccine)}
+                      >
+                        <Ionicons name="pencil" size={18} color="#111" />
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.inlineDeleteButton}
+                        onPress={() => handleRemoveVaccine(vaccine.id)}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#b91c1c"
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={styles.cardText}>
+                    Date Administered: {vaccine.dateAdministered || "N/A"}
+                  </Text>
+                </>
+              )}
             </View>
-
-            <Text style={styles.cardText}>
-              Date Administered: {vaccine.dateAdministered || "N/A"}
-            </Text>
-          </View>
-        ))
+          );
+        })
       ) : (
         <Text style={styles.emptyText}>No vaccines added.</Text>
       )}
@@ -330,30 +600,128 @@ export default function PetDetailScreen() {
   const renderAllergiesTab = () => (
     <View style={styles.section}>
       {pet?.allergies?.length ? (
-        pet.allergies.map((allergy: Allergy) => (
-          <View key={allergy.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>
-                {allergy.name || "Unnamed allergy"}
-              </Text>
+        pet.allergies.map((allergy: Allergy) => {
+          const isEditing = editingAllergyId === allergy.id;
 
-              <Pressable
-                style={styles.inlineDeleteButton}
-                onPress={() => handleRemoveAllergy(allergy.id)}
-              >
-                <Ionicons name="trash-outline" size={18} color="#b91c1c" />
-              </Pressable>
+          return (
+            <View key={allergy.id} style={styles.card}>
+              {isEditing ? (
+                <>
+                  <TextInput
+                    placeholder="Allergy name"
+                    value={editAllergyName}
+                    onChangeText={setEditAllergyName}
+                    style={styles.input}
+                  />
+
+                  <Text style={styles.subLabel}>Reactions</Text>
+                  <View style={styles.chipsRow}>
+                    {ALLERGY_REACTIONS.map((reaction) => {
+                      const selected = editAllergyReactions.includes(reaction);
+
+                      return (
+                        <Pressable
+                          key={reaction}
+                          style={[styles.chip, selected && styles.chipSelected]}
+                          onPress={() => toggleEditReaction(reaction)}
+                        >
+                          <Text
+                            style={
+                              selected
+                                ? styles.chipTextSelected
+                                : styles.chipText
+                            }
+                          >
+                            {reaction}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={styles.subLabel}>Severity</Text>
+                  <View style={styles.chipsRow}>
+                    {ALLERGY_SEVERITIES.map((severity) => {
+                      const selected = editAllergySeverity === severity;
+
+                      return (
+                        <Pressable
+                          key={severity}
+                          style={[styles.chip, selected && styles.chipSelected]}
+                          onPress={() => setEditAllergySeverity(severity)}
+                        >
+                          <Text
+                            style={
+                              selected
+                                ? styles.chipTextSelected
+                                : styles.chipText
+                            }
+                          >
+                            {severity}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.editActionsRow}>
+                    <Pressable
+                      style={styles.secondaryActionButton}
+                      onPress={cancelEditAllergy}
+                    >
+                      <Text style={styles.secondaryButtonText}>Cancel</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.primaryActionButton}
+                      onPress={saveEditedAllergy}
+                    >
+                      <Text style={styles.primaryButtonText}>Save</Text>
+                    </Pressable>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>
+                      {allergy.name || "Unnamed allergy"}
+                    </Text>
+
+                    <View style={styles.inlineActions}>
+                      <Pressable
+                        style={styles.inlineEditButton}
+                        onPress={() => startEditAllergy(allergy)}
+                      >
+                        <Ionicons name="pencil" size={18} color="#111" />
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.inlineDeleteButton}
+                        onPress={() => handleRemoveAllergy(allergy.id)}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#b91c1c"
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={styles.cardText}>
+                    Reactions:{" "}
+                    {allergy.reactions?.length
+                      ? allergy.reactions.join(", ")
+                      : "N/A"}
+                  </Text>
+                  <Text style={styles.cardText}>
+                    Severity: {allergy.severity || "N/A"}
+                  </Text>
+                </>
+              )}
             </View>
-
-            <Text style={styles.cardText}>
-              Reactions:{" "}
-              {allergy.reactions?.length ? allergy.reactions.join(", ") : "N/A"}
-            </Text>
-            <Text style={styles.cardText}>
-              Severity: {allergy.severity || "N/A"}
-            </Text>
-          </View>
-        ))
+          );
+        })
       ) : (
         <Text style={styles.emptyText}>No allergies added.</Text>
       )}
@@ -420,29 +788,92 @@ export default function PetDetailScreen() {
   const renderMedicationsTab = () => (
     <View style={styles.section}>
       {pet?.medications?.length ? (
-        pet.medications.map((medication: Medication) => (
-          <View key={medication.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>
-                {medication.name || "Unnamed medication"}
-              </Text>
+        pet.medications.map((medication: Medication) => {
+          const isEditing = editingMedicationId === medication.id;
 
-              <Pressable
-                style={styles.inlineDeleteButton}
-                onPress={() => handleRemoveMedication(medication.id)}
-              >
-                <Ionicons name="trash-outline" size={18} color="#b91c1c" />
-              </Pressable>
+          return (
+            <View key={medication.id} style={styles.card}>
+              {isEditing ? (
+                <>
+                  <TextInput
+                    placeholder="Medication name"
+                    value={editMedicationName}
+                    onChangeText={setEditMedicationName}
+                    style={styles.input}
+                  />
+
+                  <TextInput
+                    placeholder='Dosage, e.g. "3.35 mg"'
+                    value={editMedicationDosage}
+                    onChangeText={setEditMedicationDosage}
+                    style={styles.input}
+                  />
+
+                  <TextInput
+                    placeholder="Instructions"
+                    value={editMedicationInstructions}
+                    onChangeText={setEditMedicationInstructions}
+                    style={[styles.input, styles.notesInput]}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+
+                  <View style={styles.editActionsRow}>
+                    <Pressable
+                      style={styles.secondaryActionButton}
+                      onPress={cancelEditMedication}
+                    >
+                      <Text style={styles.secondaryButtonText}>Cancel</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.primaryActionButton}
+                      onPress={saveEditedMedication}
+                    >
+                      <Text style={styles.primaryButtonText}>Save</Text>
+                    </Pressable>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>
+                      {medication.name || "Unnamed medication"}
+                    </Text>
+
+                    <View style={styles.inlineActions}>
+                      <Pressable
+                        style={styles.inlineEditButton}
+                        onPress={() => startEditMedication(medication)}
+                      >
+                        <Ionicons name="pencil" size={18} color="#111" />
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.inlineDeleteButton}
+                        onPress={() => handleRemoveMedication(medication.id)}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#b91c1c"
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={styles.cardText}>
+                    Dosage: {medication.dosage || "N/A"}
+                  </Text>
+                  <Text style={styles.cardText}>
+                    Instructions: {medication.instructions || "N/A"}
+                  </Text>
+                </>
+              )}
             </View>
-
-            <Text style={styles.cardText}>
-              Dosage: {medication.dosage || "N/A"}
-            </Text>
-            <Text style={styles.cardText}>
-              Instructions: {medication.instructions || "N/A"}
-            </Text>
-          </View>
-        ))
+          );
+        })
       ) : (
         <Text style={styles.emptyText}>No medications added.</Text>
       )}
@@ -694,6 +1125,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
   },
+  inlineActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inlineEditButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e5e7eb",
+  },
   inlineDeleteButton: {
     width: 28,
     height: 28,
@@ -768,8 +1212,22 @@ const styles = StyleSheet.create({
   datePickerWrapper: {
     gap: 8,
   },
+  editActionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
   primaryButton: {
     marginTop: 4,
+    backgroundColor: "#111",
+    borderRadius: 10,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  primaryActionButton: {
+    flex: 1,
     backgroundColor: "#111",
     borderRadius: 10,
     minHeight: 44,
@@ -787,6 +1245,16 @@ const styles = StyleSheet.create({
     borderColor: "#111",
     borderRadius: 10,
     minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  secondaryActionButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#111",
+    borderRadius: 10,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
