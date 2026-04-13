@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import PetCard from "../components/ui/PetCard";
 import { clearCurrentUser, getCurrentUser } from "../storage/usersStorage";
+import { buttonStyles } from "../styles/buttonStyles";
 import { Pet } from "../types/pet";
 
 export default function PetListScreen() {
@@ -56,12 +57,12 @@ export default function PetListScreen() {
       />
       <Pressable
         style={({ pressed }) => [
-          styles.submitButton,
-          pressed && styles.submitButtonPressed,
+          buttonStyles.submitButton,
+          pressed && buttonStyles.submitButtonPressed,
         ]}
         onPress={() => handleSwitchUser()}
       >
-        <Text style={styles.submitButtonText}>Logout</Text>
+        <Text style={buttonStyles.submitButtonText}>Logout</Text>
       </Pressable>
     </View>
   );
@@ -101,23 +102,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 24,
     fontWeight: "600",
-  },
-  submitButton: {
-    marginTop: 24,
-    marginBottom: 16,
-    backgroundColor: "#111",
-    borderRadius: 10,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  submitButtonPressed: {
-    opacity: 0.85,
   },
 });

@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { signInOrCreateUser } from "../storage/usersStorage";
+import { buttonStyles } from "../styles/buttonStyles";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -32,8 +33,15 @@ export default function LoginScreen() {
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <Button title="Continue" onPress={handleContinue} />
+      <Pressable
+        style={({ pressed }) => [
+          buttonStyles.submitButton,
+          pressed && buttonStyles.submitButtonPressed,
+        ]}
+        onPress={handleContinue}
+      >
+        <Text style={buttonStyles.submitButtonText}>Log in</Text>
+      </Pressable>
     </View>
   );
 }

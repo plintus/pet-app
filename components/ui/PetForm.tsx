@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { updatePetPhoto } from "../../storage/petsStorage";
+import { buttonStyles } from "../../styles/buttonStyles";
 import { Pet } from "../../types/pet";
 
 type Props = {
@@ -253,8 +254,8 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
 
       <Pressable
         style={({ pressed }) => [
-          styles.submitButton,
-          pressed && styles.submitButtonPressed,
+          buttonStyles.submitButton,
+          pressed && buttonStyles.submitButtonPressed,
         ]}
         onPress={() =>
           onSubmit({
@@ -270,7 +271,7 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
           })
         }
       >
-        <Text style={styles.submitButtonText}>{label}</Text>
+        <Text style={buttonStyles.submitButtonText}>{label}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -370,22 +371,5 @@ const styles = StyleSheet.create({
   photoActions: {
     gap: 8,
     marginBottom: 12,
-  },
-  submitButton: {
-    marginTop: 24,
-    backgroundColor: "#111",
-    borderRadius: 10,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  submitButtonPressed: {
-    opacity: 0.85,
   },
 });
