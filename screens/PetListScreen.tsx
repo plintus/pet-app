@@ -1,13 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  Button,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import PetCard from "../components/ui/PetCard";
 import { clearCurrentUser, getCurrentUser } from "../storage/usersStorage";
 import { Pet } from "../types/pet";
@@ -61,9 +54,15 @@ export default function PetListScreen() {
         ListEmptyComponent={<Text>No pets yet.</Text>}
         contentContainerStyle={{ paddingTop: 16 }}
       />
-      <View style={styles.actions}>
-        <Button title="Logout" onPress={handleSwitchUser} />
-      </View>
+      <Pressable
+        style={({ pressed }) => [
+          styles.submitButton,
+          pressed && styles.submitButtonPressed,
+        ]}
+        onPress={() => handleSwitchUser()}
+      >
+        <Text style={styles.submitButtonText}>Logout</Text>
+      </Pressable>
     </View>
   );
 }
@@ -102,5 +101,23 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 24,
     fontWeight: "600",
+  },
+  submitButton: {
+    marginTop: 24,
+    marginBottom: 16,
+    backgroundColor: "#111",
+    borderRadius: 10,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  submitButtonPressed: {
+    opacity: 0.85,
   },
 });
