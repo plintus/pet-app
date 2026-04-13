@@ -107,12 +107,7 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollView}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.label}>Photo</Text>
-
+    <ScrollView keyboardShouldPersistTaps="handled">
       {photoUri ? (
         <Image source={{ uri: photoUri }} style={styles.photoPreview} />
       ) : null}
