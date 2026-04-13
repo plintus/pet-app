@@ -108,7 +108,7 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.container}
+      contentContainerStyle={styles.scrollView}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.label}>Photo</Text>
@@ -202,7 +202,6 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Select date of birth</Text>
-
             <DateTimePicker
               value={tempDob}
               mode="date"
@@ -257,8 +256,11 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
         textAlignVertical="top"
       />
 
-      <Button
-        title={label}
+      <Pressable
+        style={({ pressed }) => [
+          styles.submitButton,
+          pressed && styles.submitButtonPressed,
+        ]}
         onPress={() =>
           onSubmit({
             name,
@@ -272,7 +274,9 @@ export default function PetForm({ initialValues, onSubmit }: Props) {
             medications,
           })
         }
-      />
+      >
+        <Text style={styles.submitButtonText}>{label}</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -353,6 +357,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#444",
+    marginTop: 12,
+    marginBottom: 4,
   },
   notesInput: {
     minHeight: 100,
@@ -369,5 +375,22 @@ const styles = StyleSheet.create({
   photoActions: {
     gap: 8,
     marginBottom: 12,
+  },
+  submitButton: {
+    marginTop: 24,
+    backgroundColor: "#111",
+    borderRadius: 10,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  submitButtonPressed: {
+    opacity: 0.85,
   },
 });
