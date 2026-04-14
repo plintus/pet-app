@@ -96,6 +96,10 @@ export default function PetDetailScreen() {
   const [editMedicationInstructions, setEditMedicationInstructions] =
     useState("");
 
+  const [isAddingVaccine, setIsAddingVaccine] = useState(false);
+  const [isAddingAllergy, setIsAddingAllergy] = useState(false);
+  const [isAddingMedication, setIsAddingMedication] = useState(false);
+
   useEffect(() => {
     async function loadPet() {
       if (!id) return;
@@ -185,6 +189,7 @@ export default function PetDetailScreen() {
     await saveUpdatedPet(updatedPet);
     setNewVaccineName("");
     setNewVaccineDate("");
+    setIsAddingVaccine(false);
   };
 
   const handleRemoveVaccine = async (vaccineId: string) => {
@@ -265,6 +270,7 @@ export default function PetDetailScreen() {
     setNewAllergyName("");
     setNewAllergyReactions([]);
     setNewAllergySeverity("mild");
+    setIsAddingAllergy(false);
   };
 
   const handleRemoveAllergy = async (allergyId: string) => {
@@ -319,6 +325,7 @@ export default function PetDetailScreen() {
     setNewMedicationName("");
     setNewMedicationDosage("");
     setNewMedicationInstructions("");
+    setIsAddingMedication(false);
   };
 
   const handleRemoveMedication = async (medicationId: string) => {
@@ -563,6 +570,71 @@ export default function PetDetailScreen() {
 
   const renderAllergiesTab = () => (
     <View style={styles.section}>
+      {!isAddingAllergy ? (
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() => setIsAddingAllergy(true)}
+        >
+          <Text style={styles.primaryButtonText}>Add Allergy</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Add Allergy</Text>
+
+          <TextInput
+            placeholder="Allergy name"
+            value={newAllergyName}
+            onChangeText={setNewAllergyName}
+            style={styles.input}
+          />
+
+          <Text style={styles.subLabel}>Reactions</Text>
+          <View style={styles.chipsRow}>
+            {ALLERGY_REACTIONS.map((reaction) => {
+              const selected = newAllergyReactions.includes(reaction);
+
+              return (
+                <Pressable
+                  key={reaction}
+                  style={[styles.chip, selected && styles.chipSelected]}
+                  onPress={() => toggleReaction(reaction)}
+                >
+                  <Text
+                    style={selected ? styles.chipTextSelected : styles.chipText}
+                  >
+                    {reaction}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.subLabel}>Severity</Text>
+          <View style={styles.chipsRow}>
+            {ALLERGY_SEVERITIES.map((severity) => {
+              const selected = newAllergySeverity === severity;
+
+              return (
+                <Pressable
+                  key={severity}
+                  style={[styles.chip, selected && styles.chipSelected]}
+                  onPress={() => setNewAllergySeverity(severity)}
+                >
+                  <Text
+                    style={selected ? styles.chipTextSelected : styles.chipText}
+                  >
+                    {severity}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Pressable style={styles.primaryButton} onPress={handleAddAllergy}>
+            <Text style={styles.primaryButtonText}>Add Allergy</Text>
+          </Pressable>
+        </View>
+      )}
       {pet?.allergies?.length ? (
         pet.allergies.map((allergy: Allergy) => {
           const isEditing = editingAllergyId === allergy.id;
@@ -689,68 +761,52 @@ export default function PetDetailScreen() {
       ) : (
         <Text style={styles.emptyText}>No allergies added.</Text>
       )}
-
-      <View style={styles.formCard}>
-        <Text style={styles.formTitle}>Add Allergy</Text>
-
-        <TextInput
-          placeholder="Allergy name"
-          value={newAllergyName}
-          onChangeText={setNewAllergyName}
-          style={styles.input}
-        />
-
-        <Text style={styles.subLabel}>Reactions</Text>
-        <View style={styles.chipsRow}>
-          {ALLERGY_REACTIONS.map((reaction) => {
-            const selected = newAllergyReactions.includes(reaction);
-
-            return (
-              <Pressable
-                key={reaction}
-                style={[styles.chip, selected && styles.chipSelected]}
-                onPress={() => toggleReaction(reaction)}
-              >
-                <Text
-                  style={selected ? styles.chipTextSelected : styles.chipText}
-                >
-                  {reaction}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.subLabel}>Severity</Text>
-        <View style={styles.chipsRow}>
-          {ALLERGY_SEVERITIES.map((severity) => {
-            const selected = newAllergySeverity === severity;
-
-            return (
-              <Pressable
-                key={severity}
-                style={[styles.chip, selected && styles.chipSelected]}
-                onPress={() => setNewAllergySeverity(severity)}
-              >
-                <Text
-                  style={selected ? styles.chipTextSelected : styles.chipText}
-                >
-                  {severity}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Pressable style={styles.primaryButton} onPress={handleAddAllergy}>
-          <Text style={styles.primaryButtonText}>Add Allergy</Text>
-        </Pressable>
-      </View>
     </View>
   );
 
   const renderMedicationsTab = () => (
     <View style={styles.section}>
+      {!isAddingMedication ? (
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() => setIsAddingMedication(true)}
+        >
+          <Text style={styles.primaryButtonText}>Add Medication</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Add Medication</Text>
+
+          <TextInput
+            placeholder="Medication name"
+            value={newMedicationName}
+            onChangeText={setNewMedicationName}
+            style={styles.input}
+          />
+
+          <TextInput
+            placeholder='Dosage, e.g. "3.35 mg"'
+            value={newMedicationDosage}
+            onChangeText={setNewMedicationDosage}
+            style={styles.input}
+          />
+
+          <TextInput
+            placeholder="Instructions"
+            value={newMedicationInstructions}
+            onChangeText={setNewMedicationInstructions}
+            style={[styles.input, styles.notesInput]}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+
+          <Pressable style={styles.primaryButton} onPress={handleAddMedication}>
+            <Text style={styles.primaryButtonText}>Add Medication</Text>
+          </Pressable>
+        </View>
+      )}
+
       {pet?.medications?.length ? (
         pet.medications.map((medication: Medication) => {
           const isEditing = editingMedicationId === medication.id;
@@ -841,38 +897,6 @@ export default function PetDetailScreen() {
       ) : (
         <Text style={styles.emptyText}>No medications added.</Text>
       )}
-
-      <View style={styles.formCard}>
-        <Text style={styles.formTitle}>Add Medication</Text>
-
-        <TextInput
-          placeholder="Medication name"
-          value={newMedicationName}
-          onChangeText={setNewMedicationName}
-          style={styles.input}
-        />
-
-        <TextInput
-          placeholder='Dosage, e.g. "3.35 mg"'
-          value={newMedicationDosage}
-          onChangeText={setNewMedicationDosage}
-          style={styles.input}
-        />
-
-        <TextInput
-          placeholder="Instructions"
-          value={newMedicationInstructions}
-          onChangeText={setNewMedicationInstructions}
-          style={[styles.input, styles.notesInput]}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
-
-        <Pressable style={styles.primaryButton} onPress={handleAddMedication}>
-          <Text style={styles.primaryButtonText}>Add Medication</Text>
-        </Pressable>
-      </View>
     </View>
   );
 
